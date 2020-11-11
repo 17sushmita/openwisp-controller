@@ -914,6 +914,42 @@ class TestAdmin(
         response = self.client.post(path, data, follow=True)
         self.assertContains(response, '{} (Clone 3)'.format(t.name))
 
+    def _test_system_context_field_helper(self, path, check_value=None):
+        r = self.client.get(path)
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'System Defined Variables')
+        self.assertContains(r, json.dumps(check_value))
+
+    def test_system_context_field_presence(self):
+        t = self._create_template()
+        d = self._create_device()
+        v = self._create_vpn()
+        self._create_config(device=d, config=t.config)
+        d.refresh_from_db()
+
+        with self.subTest('test field present in template add form'):
+            path = reverse(f'admin:{self.app_label}_template_add')
+            self._test_system_context_field_helper(path, t.get_system_context())
+
+        with self.subTest('test field present in template change form'):
+            path = reverse(f'admin:{self.app_label}_template_change', args=[t.pk])
+            self._test_system_context_field_helper(path, t.get_system_context())
+        with self.subTest('test field present in vpn add form'):
+            path = reverse(f'admin:{self.app_label}_vpn_add')
+            self._test_system_context_field_helper(path, t.get_system_context())
+
+        with self.subTest('test field present in vpn change form'):
+            path = reverse(f'admin:{self.app_label}_vpn_change', args=[v.pk])
+            self._test_system_context_field_helper(path, v.get_system_context())
+
+        with self.subTest('test field present in device add form'):
+            path = reverse(f'admin:{self.app_label}_device_add')
+            self._test_system_context_field_helper(path, t.get_system_context())
+
+        with self.subTest('test field present in device change form'):
+            path = reverse(f'admin:{self.app_label}_device_change', args=[d.pk])
+            self._test_system_context_field_helper(path, d.get_system_context())
+
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()

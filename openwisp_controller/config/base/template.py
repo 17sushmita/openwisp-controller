@@ -165,6 +165,12 @@ class AbstractTemplate(ShareableOrgMixin, BaseConfig):
         context.update(super().get_context())
         return context
 
+    def get_system_context(self):
+        system_context = self.get_context()
+        for key in self.default_values:
+            system_context.pop(key, None)
+        return OrderedDict(sorted(system_context.items()))
+
     def clone(self, user):
         clone = copy(self)
         clone.name = self.__get_clone_name()
